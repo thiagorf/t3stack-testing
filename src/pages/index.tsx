@@ -1,10 +1,21 @@
 import { type NextPage } from "next";
 import Head from "next/head";
-import { SignIn, SignInButton, SignOutButton, useUser } from "@clerk/nextjs";
+import { SignInButton, useUser } from "@clerk/nextjs";
 import { RouterOutputs, api } from "~/utils/api";
 
 const CreatePostWizard = () => {
   const { user } = useUser();
+
+  const [input, setInput] = useState("");
+
+    const ctx = api.useContext();
+
+  const { mutate, isLoading: isPosting } = api.post.create.useMutation({
+    onSuccess: () => {
+        setInput("")
+        void ctx.post.getAll.invalidate()
+    }
+  });
 
   if (!user) return null;
 
@@ -13,12 +24,19 @@ const CreatePostWizard = () => {
       <Image
         src={user.profileImageUrl}
         alt="Profile image"
-        className="h-14 w-14 rounded-full"
+        className="rounded-full"
+        width={56}
+        height={56}
       />
       <input
         placeholder="Type some emojis!"
         className="grow bg-transparent outline-none"
+        type="text"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        disabled={isPosting}
       />
+      <button onClick={() => mutate({ content: input })}>Send</button>
     </div>
   );
 };
@@ -29,6 +47,7 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import Image from "next/image";
 import { LoadingPage } from "~/components/loading";
+import { useState } from "react";
 
 dayjs.extend(relativeTime);
 
@@ -41,6 +60,8 @@ const PostView = (props: PostWithUser) => {
         src={author.profileImageUrl}
         alt="Profile image"
         className="h-14 w-14 rounded-full"
+        width={56}
+        height={56}
       />
       <div className="flex flex-col">
         <div className="flex gap-1 text-slate-300">
@@ -49,7 +70,7 @@ const PostView = (props: PostWithUser) => {
             post.createdAt
           ).fromNow()}`}</span>
         </div>
-        <span>{post.content}</span>
+        <span className="text-2xl">{post.content}</span>
       </div>
     </div>
   );
@@ -58,7 +79,10 @@ const PostView = (props: PostWithUser) => {
 const Feed = () => {
   const { data, isLoading: postLoading } = api.post.getAll.useQuery();
 
+  console.log(data);
+
   if (postLoading) return <LoadingPage />;
+  console.log("Loading..");
 
   if (!data) return <div>Something went wrong!</div>;
 
@@ -72,10 +96,10 @@ const Feed = () => {
 };
 
 const Home: NextPage = () => {
-  const { user, isLoaded: userLoaded, isSignedIn} = useUser();
+  const { user, isLoaded: userLoaded, isSignedIn } = useUser();
 
   api.post.getAll.useQuery();
-  
+
   if (!userLoaded) return <div />;
 
   return (
