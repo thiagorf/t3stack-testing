@@ -1,20 +1,21 @@
 import { type NextPage } from "next";
 import Head from "next/head";
 import { SignInButton, useUser } from "@clerk/nextjs";
-import { RouterOutputs, api } from "~/utils/api";
+import { api } from "~/utils/api";
+import type { RouterOutputs } from "~/utils/api";
 
 const CreatePostWizard = () => {
   const { user } = useUser();
 
   const [input, setInput] = useState("");
 
-    const ctx = api.useContext();
+  const ctx = api.useContext();
 
   const { mutate, isLoading: isPosting } = api.post.create.useMutation({
     onSuccess: () => {
-        setInput("")
-        void ctx.post.getAll.invalidate()
-    }
+      setInput("");
+      void ctx.post.getAll.invalidate();
+    },
   });
 
   if (!user) return null;
@@ -96,7 +97,7 @@ const Feed = () => {
 };
 
 const Home: NextPage = () => {
-  const {  isLoaded: userLoaded, isSignedIn } = useUser();
+  const { isLoaded: userLoaded, isSignedIn } = useUser();
 
   api.post.getAll.useQuery();
 
