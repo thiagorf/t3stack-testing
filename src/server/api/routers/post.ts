@@ -13,7 +13,7 @@ import { Redis } from "@upstash/redis";
 import { filterUserForClient } from "~/server/helpers/filterUserForClient";
 import { Post } from "@prisma/client";
 
-const addUsersDataToPosts = async (posts: Post[]) => {
+const addUserDataToPosts = async (posts: Post[]) => {
   const users = (
     await clerkClient.users.getUserList({
       userId: posts.map((post) => post.authorId),
@@ -54,8 +54,26 @@ export const postRouter = createTRPCRouter({
       },
     });
 
-    return addUsersDataToPosts(posts);
+    return addUserDataToPosts(posts);
   }),
+
+  getById: publicProcedure
+    .input(
+      z.object({
+        id: z.string(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const post = await ctx.prisma.post.findUnique({
+        where: {
+          id: input.id,
+        },
+      });
+
+      if (!post) throw new TRPCError({ code: "NOT_FOUND" });
+
+      return (await addUserDataToPosts([post]))[0];
+    }),
 
   getPostByUserId: publicProcedure
     .input(
@@ -74,7 +92,7 @@ export const postRouter = createTRPCRouter({
             createdAt: "desc",
           },
         })
-        .then(addUsersDataToPosts);
+        .then(addUserDataToPosts);
 
       return posts;
     }),
