@@ -1,5 +1,6 @@
 import { type NextPage } from "next";
 import Head from "next/head";
+import { PageLayout } from "~/components/layout";
 
 const SinglePostPage: NextPage = () => {
   return (
@@ -7,7 +8,7 @@ const SinglePostPage: NextPage = () => {
       <Head>
         <title>Post</title>
       </Head>
-      <main className="flex h-screen justify-center"></main>
+      <PageLayout>post</PageLayout>
     </>
   );
 };
